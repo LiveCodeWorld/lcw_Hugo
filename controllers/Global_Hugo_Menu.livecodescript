@@ -112,9 +112,36 @@ end NewRequest
 
 --> Global | Hugo | Menu
 -
-on menu_Test
-   put shell ("vi")
-end menu_Test
+on menu_HugoServer
+   put the hugoProject_Param of me into projectName
+   --
+   -- hugo_BackgroundServer projectName
+   -- put hugo_ExtractLocalUrl (shellResult) into localURL
+   
+   hugo_OpenProcess projectName
+   put the result into localURL
+   --
+   launch url localURL
+end menu_HugoServer
+
+on menu_CloseHugoProcess
+   hugo_CloseProcess
+   put the result into processPath
+   -- hugo_KillProcess
+   put hugo_GetProcess() into hugoProcesses
+   if hugoProcesses is empty then
+      lcw_Notify "Killed all hugo processes."
+   else
+      answer warning the result
+   end if
+end menu_CloseHugoProcess
+
+on menu_HugoProcesses
+   put hugo_GetProcess()
+end menu_HugoProcesses
+
+on _
+end _
 
 on menu_HugoExport
    put the hugoProject_Param of me into projectName
@@ -137,6 +164,7 @@ on _
 end _
 
 on menu_StartHugoServer indexView
+   -- uses Livecode as a server (not finsihed)
    put the hugoProject_Param of me into projectName
    put hugo_GetPublicFolder (projectName) into projectFolder
    set the defaultfolder to projectFolder
@@ -149,6 +177,7 @@ on menu_StartHugoServer indexView
 end menu_StartHugoServer
 
 on menu_StopHugoServer
+   -- uses Livecode as a server (not finsihed)
    put LocalArray ["portID"] into portID
    httpdStop portID
    delete variable LocalArray ["portID"]
@@ -164,31 +193,6 @@ on menu_TrashPublicFolder
       revDeleteFolder publicFolder
    end if
 end menu_TrashPublicFolder
-
-on _
-end _
-
-on menu_HugoBackgroundServer
-   put the hugoProject_Param of me into projectName
-   hugo_BackgroundServer projectName
-   put the result into shellResult
-   put hugo_ExtractLocalUrl (shellResult) into localURL
-   put shellResult
-   launch url localURL
-end menu_HugoBackgroundServer
-
-on menu_HugoProcesses
-   put hugo_GetProcess()
-end menu_HugoProcesses
-
-on menu_KillHugo
-   hugo_KillProcess
-   if the result is empty then
-      lcw_Notify "Killed all hugo processes."
-   else
-      answer warning the result
-   end if
-end menu_KillHugo
 
 on _
 end _

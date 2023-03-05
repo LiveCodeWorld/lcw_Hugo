@@ -145,31 +145,8 @@ end hugo_MonitorProcess
 command hugo_CloseProcess
    put hugo_GetProcessPath() into tProcess
    kill process tProcess
+   return tProcess
 end hugo_CloseProcess
-
-command process_KillAll
-   repeat for each line processPath in the openprocesses
-      if the platform = "MacOS" then
-         kill process processPath
-      else
-         close process processPath
-      end if
-   end repeat
-end process_KillAll
-
-command hugo_BackgroundServer projectName
-   put env_GetFolder (projectName) into projectFolder
-   set the defaultfolder to projectFolder
-   --
-   put the tempname & ".txt" into someFile
-   put "hugo server >" && someFile && "2>&1 &" into tShell
-   put shell (tShell) into shellResult
-   
-   -- can take some time to start up so let's read from file till the end
-   _ReadFromFile someFile
-   put the result into fileContents
-   return fileContents
-end hugo_BackgroundServer
 
 function hugo_ExtractLocalUrl shellResult
    -- defaults to "http://localhost:1313/"
@@ -189,17 +166,6 @@ private command _ReadFromFile someFile
    end repeat
    return fileContents
 end _ReadFromFile
-
-function hugo_GetProcess
-   -- can be an index of several processes
-   return shell ("pgrep hugo")
-end hugo_GetProcess
-
-command hugo_KillProcess
-   -- will kill all hugo processes
-   put shell ("pkill hugo") into emptyResult
-   return hugo_GetProcess(expression) -- should be empty
-end hugo_KillProcess
 
 function hugo_ListProjectNames
    put env_ListProjectFolders(true) into pFolders
@@ -236,3 +202,45 @@ function hugo_IsFolder projectFolder
    end switch
 end hugo_IsFolder
 
+
+--> Hugo | Shell Server
+-
+/*
+Calling hugo server using shell is possible 
+but not as elegant as using hugo_OpenProcess (which uses open processs) 
+*/
+
+command hugo_ShellServer projectName
+   put env_GetFolder (projectName) into projectFolder
+   set the defaultfolder to projectFolder
+   --
+   put the tempname & ".txt" into someFile
+   put "hugo server >" && someFile && "2>&1 &" into tShell
+   put shell (tShell) into shellResult
+   
+   -- can take some time to start up so let's read from file till the end
+   _ReadFromFile someFile
+   put the result into fileContents
+   return fileContents
+end hugo_ShellServer
+
+command hugo_KillProcess
+   -- will kill all hugo processes
+   put shell ("pkill hugo") into emptyResult
+   return hugo_GetProcess() -- should be empty
+end hugo_KillProcess
+
+function hugo_GetProcess
+   -- can be an index of several processes
+   return shell ("pgrep hugo")
+end hugo_GetProcess
+
+command process_KillAll
+   repeat for each line processPath in the openprocesses
+      if the platform = "MacOS" then
+         kill process processPath
+      else
+         close process processPath
+      end if
+   end repeat
+end process_KillAll
